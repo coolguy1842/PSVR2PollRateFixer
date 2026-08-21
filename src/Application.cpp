@@ -5,6 +5,21 @@
 #include <set>
 #include <thread>
 
+enum PollRate {
+    Poll20Hz = 80,
+    Poll33Hz = 48,
+    Poll40Hz = 40,
+    Poll50Hz = 32,
+    Poll66Hz = 24,
+    Poll80Hz = 20,
+    Poll100Hz = 16,
+    Poll133Hz = 12,
+    Poll160Hz = 10,
+    Poll200Hz = 8,
+    Poll266Hz = 6,
+    PollDefault = 0
+};
+
 Application::Application() {
     if(hid_init() == -1) {
         setShouldExit();
@@ -23,7 +38,9 @@ Application::~Application() {
     hid_exit();
 }
 
-void updateReportRate(unsigned char report[0x30], int rate) {
+void updateReportRate(unsigned char report[0x30], PollRate newRate) {
+    int rate = (int)newRate + (((int)newRate / 6) << 16);
+    printf("rate: %d\n", rate);
     memcpy(&report[0x2], &rate, sizeof(rate));
 
     unsigned long crc = calculateCRC32(0x53, report, 0x30);
@@ -45,12 +62,10 @@ void Application::sendPollratePacket(hid_device_info* info) {
     report[0] = 0x08; // Report ID
     report[1] = 0x0E;
 
-    updateReportRate(report, 0);
+    updateReportRate(report, PollDefault);
     hid_send_feature_report(device, report, sizeof(report));
 
-    // poll rate in hz
-    int rate = 133;
-    updateReportRate(report, (int)rate + (((int)rate / 6) << 16));
+    updateReportRate(report, Poll133Hz);
     hid_send_feature_report(device, report, sizeof(report));
 
     printf("Sent poll-rate reports.\n");
