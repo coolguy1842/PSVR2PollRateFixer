@@ -31,7 +31,7 @@
             PSVR2PollRateFixer = pkgs.stdenv.mkDerivation {
                 name = "PSVR2PollRateFixer";
                 version = "1.0.0";
-                src = ../.;
+                src = ./.;
 
                 nativeBuildInputs = with pkgs; [
                     clang
